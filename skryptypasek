@@ -1,0 +1,406 @@
+Są to skrypty, które z powodzeniem używałem na poprzednich światach
+
+Planer ataków/wsparcia
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/kalk_atk.js"); void(0);
+
+
+
+Generowanie wysyłki wsparcia (przydatne przy większej ilości wsi
+javascript: $.getScript('https://media.innogamescdn.com/com_DS_PL/skrypty/HermitowskieObstawy.js'); void(0);
+
+
+
+Licznik woja
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/licznik_wojska.js"); void(0);
+
+
+
+Ile defa leci jako wsparcie + sumowanie zagród - odpalamy z widoku wioski (na mapie klik na środek "informacje o wiosce")
+javascript:
+if (window.location.href.match("info_village") != null){
+var unitlink = "https://dspl.innogamescdn.com/asset/63a05504/graphic/unit/unit_";
+var jednostkiObrazki = "spear,sword,axe,archer,spy,light,marcher,heavy,ram,catapult,knight,snob".split(",");
+var tabelka= '<style>#hofcio_div td{white-space: nowrap;} #hofcio_suma_off,#hofcio_suma_def,#hofcio_suma_o,#hofcio_suma_in div{margin:0px 5px 5px 0px;} h4{color:green;} tr{border-spacing: 2px;border-collapse: separate;}</style>';
+tabelka +='<div id="hofcio_div" style="width:750px;"><h2>Kalkulator rozkazów</h2>'+
+'<div style="width:68%;float:left;overflow: auto; height: 350px;">'+
+'<select id="howcio_sel"><option value=0>Tylko własne komendy</option><option value=1>Wszystkie komendy</option></select> <input type=button id="howcio_subm" class=btn value="Załaduj Dane" onclick="letsgo();"><br><br>'+
+'<table class="vis hofcio" id=tabelkahow><tbody><tr class=zostaw>';
+for(var a=0;a<jednostkiObrazki.length;a++){ tabelka += '<th width="25px"><img src="'+unitlink+jednostkiObrazki[a]+'.png"></th>'}
+tabelka +='<th>Typ</th></tr></tbody></table></div>';
+tabelka +='<div style="width:31%;float:right;"><div style="width:100% text-align:center;"><h4 id="hofcio_suma_1h"></h4><div id="hofcio_suma_off" style ="width:45%; float:left;"></div><div id="hofcio_suma_def" style ="width:45%; float:right;"></div></div><div id="hofcio_suma_o"></div><div id="hofcio_suma_in"></div><div style="position: fixed;bottom: 0;right: 0;fontSize:8px">Created by <b>Howcio712</b> / Repaired by <b>Rinne</b> & <b>Gangsta Anime Girl</b></div></div>';
+Dialog.show("okienko_komunikatu",tabelka);
+function letsgo(){
+document.getElementById("howcio_subm").disabled=true;
+$("#tabelkahow tr").not(".zostaw").remove();
+var kom = $(".command_hover_details");
+var ideki = [];
+for (var i = 0;i< kom.length;i++){
+var klasy = kom.classList;
+if(kom.getAttribute("data-command-type")=="return"){}else{
+if (klasy[0].includes("commandicon-ally")){
+if(document.getElementById("howcio_sel").value==1){
+if (ideki.includes(kom.getAttribute("data-command-id")+":ally")){
+}else{ideki.push(kom.getAttribute("data-command-id")+":ally");}}}else{
+if (ideki.includes(kom.getAttribute("data-command-id")+":own")){
+}else{ideki.push(kom.getAttribute("data-command-id")+":own");}}}}
+var xd = setInterval(function(){
+if(ideki.length<1){
+clearInterval(xd);
+setTimeout(function(){
+suma();
+document.getElementById("howcio_subm").disabled=false;
+},2500)};
+if(game_data.player.sitter != 0){
+var url = 'game.php?screen=info_command&t=' + game_data.player.id;
+}else{var url = 'game.php?screen=info_command';}
+if(ideki.length>0){
+var numerek = ideki[0].split(":")[0];
+var tekst = ideki[0].split(":")[1];
+$.get( url+"&ajax=details&id="+numerek, function( data ) {
+dane = data;
+var ikonka = dane.type+".png";
+var czas_dojscia = "<img src='https://dspl.innogamescdn.com/asset/63a05504/graphic/command/"+ikonka+"'>";
+if(tekst =="ally"){czas_dojscia += "<img src='https://dspl.innogamescdn.com/asset/63a05504/graphic/command/ally.png'>";}
+var table = document.getElementsByClassName("hofcio")[0];
+var row = table.insertRow();
+var cell = row.insertCell(0).innerHTML = dane.units.spear.count;
+var cell = row.insertCell(1).innerHTML = dane.units.sword.count;
+var cell = row.insertCell(2).innerHTML = dane.units.axe.count;
+var cell = row.insertCell(3).innerHTML = dane.units.archer.count;
+var cell = row.insertCell(4).innerHTML = dane.units.spy.count;
+var cell = row.insertCell(5).innerHTML = dane.units.light.count;
+var cell = row.insertCell(6).innerHTML = dane.units.marcher.count;
+var cell = row.insertCell(7).innerHTML = dane.units.heavy.count;
+var cell = row.insertCell(8).innerHTML = dane.units.ram.count;
+var cell = row.insertCell(9).innerHTML = dane.units.catapult.count;
+var cell = row.insertCell(10).innerHTML = dane.units.knight.count;
+var cell = row.insertCell(11).innerHTML = dane.units.snob.count;
+var cell = row.insertCell(12).innerHTML = czas_dojscia;
+});}
+ideki.splice(0, 1);
+if(ideki.length<1){
+clearInterval(xd);
+setTimeout(function(){
+suma();
+document.getElementById("howcio_subm").disabled=false;
+},2500)};}, 250)}
+function suma(){
+hofcio_sum = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var linijki = $(".hofcio>tbody>tr");
+
+for (var x=1;x<linijki.length;x++){
+var kolumny = linijki[x].getElementsByTagName("td")
+for (var c=0;c<kolumny.length;c++){
+var hofcio_sumka = parseInt(linijki[x].getElementsByTagName("td")[c].innerHTML);
+var ile123 = hofcio_sum[c];
+var ile123 = ile123 + hofcio_sumka;
+hofcio_sum[c] = ile123;}}
+var zagrody = Math.round(((((1*hofcio_sum[0])+(1*hofcio_sum[1])+(1*hofcio_sum[3])+(6*hofcio_sum[7]))/20000))* 100)/100;
+var razemzag =0;
+var tablicax = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+if(document.getElementsByTagName("h3").length > 1){
+var def = $("table.vis");
+var wlasciwa = def[def.length-2];
+var linijkii = wlasciwa.getElementsByTagName("tr");
+for (var i = 1;i<linijkii.length;i++)
+{var tdy = linijkii.getElementsByTagName("td");
+for (var j = 1;j<tdy.length-2;j++)
+{var hofcio_sumka = parseInt(tdy[j].innerHTML);
+var ile111 = tablicax[j];
+var ile111 = ile111 + hofcio_sumka;
+tablicax[j] = ile111;}}
+var razemzag = Math.round(((((1*tablicax[1])+(1*tablicax[2])+(1*tablicax[4])+(6*tablicax[8]))/20000))* 100)/100;
+if (razemzag == undefined){razemzag=0;};
+}
+$("#hofcio_suma_1h")[0].innerHTML = "Wojsko w drodze na wioskę";
+$("#hofcio_suma_off")[0].innerHTML = "<font color=red>Ofensywa:</font><br>Topornik: <b>"+hofcio_sum[2]+"</b><br>LK: <b>"+hofcio_sum[5]+"</b><br>ŁK: <b>"+hofcio_sum[6]+"</b><br>Taran: <b>"+hofcio_sum[8]+"</b>";
+$("#hofcio_suma_def")[0].innerHTML = "<font color=red>Defensywa:</font><br>Pikinier: <b>"+hofcio_sum[0]+"</b><br>Miecznik: <b>"+hofcio_sum[1]+"</b><br>Łucznik: <b>"+hofcio_sum[3]+"</b><br>CK: <b>"+hofcio_sum[7]+"</b><br><br>Razem Zagród DEF: <b>"+zagrody+"</b>";
+$("#hofcio_suma_o")[0].innerHTML = "<font color=red>Inne:</font><br>Zwiadowca: <b>"+hofcio_sum[4]+"</b><br>Katapulta: <b>"+hofcio_sum[9]+"</b><br>Rycerz: <b>"+hofcio_sum[10]+"</b><br>Szlachcic: <b>"+hofcio_sum[11]+"</b>";
+$("#hofcio_suma_in")[0].innerHTML = "<h4>Def znajdujący się w wiosce</h4>Pikinier: <b>"+tablicax[1]+"</b><br>Miecznik: <b>"+tablicax[2]+"</b><br>Łucznik: <b>"+tablicax[4]+"</b><br>CK: <b>"+tablicax[8]+"</b><br>Razem Zagród <b>"+razemzag+"</b><br>Katapulta: <b>"+tablicax[10]+"</b><br>Rycerz: <b>"+tablicax[11]+"</b><br>";
+}}else{UI.InfoMessage('Uruchom w informacjach o wiosce<br>(Środkowa ikonka klikając na wioskę na mapie)<br><img src="http://michuni.pl/112.png">',8000,'error')};
+
+
+
+Fejkomat - wrzucam z moimi templetkami - uważam że są lepsze niż te podstawowe, bo mamy mniejsze straty.
+javascript: var HermitowskieFejki = {
+omitNightBonus: 'true',
+coords: 'tu wpisz cordy',
+days: '01-30',
+intervals: '08:00-12:00',
+templates: [
+{ spear: 35, spy: 5, heavy: 5, ram: 5 },
+{ spear: 35, spy: 5, heavy: 5, catapult: 5 },
+{ axe: 35, spy: 10, light: 5, ram: 5 },
+{ axe: 35, spy: 10, light: 5, catapult: 5 },
+{ ram: 5 },
+{ catapult: 5 }
+],
+fillWith: 'spear,axe,spy,light,heavy,ram,catapult',
+fillExact: 'false',
+skipVillages: 'true',
+safeguard: {},
+};
+$.ajax('https://media.innogamescdn.com/com_DS_PL/skrypty/HermitowskieFejki.js?_='+~~(Date.now()/9e6),{dataType: 'script', cache: 1}); void (0);
+
+
+
+Notatki
+javascript: $.ajax('https://media.innogamescdn.com/com_DS_PL/skrypty/HermitowskieNotatki.js?_='+~~(Date.now()/9e6),{cache:1,dataType:'script'}); void (0);
+
+
+
+Usuwanie notatek
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/notes_script.js"); void(0);
+
+
+
+Statystyki farmy i zbieractwo w przeglądzie profilu gracza
+javascript:
+const app = {
+template: 'https://{{world}}.plemiona.pl/game.php?screen=ranking&mode=in_a_day&type={{type}}&name={{search}}',
+
+load() {
+const dataTypes = [{
+name: "Rekord farmy:",
+url: "loot_res"
+}, {
+name: "Rekord wiosek:",
+url: "loot_vil"
+}, {
+name: "Rekord zbierania:",
+url: "scavenge"
+}];
+
+// Iterate each type
+dataTypes.forEach((t) => {
+this.getData(this.getUrl(t.url), (e) => {
+$('#player_info tbody').append(`
+<tr>
+<td>${t.name}</td>
+<td>${e.eq(3).text()}, <font color="#6e6e6e">${e.eq(4).text()}</font></td>
+</tr>
+`);
+});
+});
+},
+
+getData (target, callback) {
+$.ajax({
+url: target,
+dataType: 'html',
+success: function(e) {
+// Get row with score
+let result = $(e).find('#in_a_day_ranking_table tr').eq(1).find('td');
+callback(result);
+}});
+},
+
+getUrl (target) {
+let playerName = $('#player_info').find('img[src*="player_points"]').parent().text().trim();
+
+// Prepare URL
+let url = this.template
+.replace("{{world}}", game_data.world)
+.replace("{{type}}", target)
+.replace("{{search}}", playerName);
+
+return url;
+}
+};
+
+app.load();
+
+
+
+To samo co wyżej tylko w przeglądzie członków plemienia
+javascript:
+class UrlBuilder
+{
+constructor(template)
+{
+this.template = template;
+}
+
+build(args)
+{
+let result = this.template;
+let keys = Object.keys(args);
+
+keys.forEach((e) => {
+result = result.replace("{{" + e + "}}", args[e]);
+});
+
+return result;
+}
+}
+
+class App
+{
+constructor(config)
+{
+this.config = config;
+}
+
+load()
+{
+// Set local members
+this.iterator = 0;
+this.members = $('#content_value table').eq(2).find('tr').splice(1);
+this.interval = setInterval($.proxy(this.update, this), 600);
+
+// Add headers
+let header = $('#content_value table').eq(2).find('tr').eq(0);
+header.find('th:last').after('<th class="nowrap"><a href="#">Rekord farmy</a></th> <th class="nowrap"><a href="#">Rekord zbieractwa</a></th> <th class="nowrap"><a href="#">Odznaczenia</a></th>');
+}
+
+unload()
+{
+if (this.interval != undefined && this.interval != null)
+{
+clearInterval(this.interval);
+}
+}
+
+update()
+{
+if (this.iterator >= this.members.length)
+{
+this.unload();
+return;
+}
+
+this.getData(this.members[this.iterator++]);
+}
+
+getData(input)
+{
+let player = $(input).find('td:first').text().trim().split('(')[0].trim();
+let url = new UrlBuilder('https://{{world}}.plemiona.pl/game.php?screen=ranking&mode=in_a_day&type={{type}}&name={{name}}');
+
+// Ask server for data
+// Looted resources
+this.askServer(url.build({ world: game_data.world, type: 'loot_res', name: player }), function (response) {
+response = $(response);
+
+let score = response.find('#in_a_day_ranking_table tr').eq(1).find('td').eq(3).text();
+$(input).find('td:last').after('<td class="lit-item"><b>' + (score.length <= 0 ? "-" : score) + '</b></td>');
+
+// Scavenge
+app.askServer(url.build({ world: game_data.world, type: 'scavenge', name: player }), function (response) {
+response = $(response);
+
+let score = response.find('#in_a_day_ranking_table tr').eq(1).find('td').eq(3).text();
+$(input).find('td:last').after('<td class="lit-item"><b>' + (score.length <= 0 ? "-" : score) + '</b></td>');
+
+// Awards
+url = new UrlBuilder('https://{{world}}.plemiona.pl/game.php?screen=ranking&mode=awards&name={{name}}')
+app.askServer(url.build({ world: game_data.world, name: player }), function (response) {
+response = $(response);
+
+let result = response.find('#award_ranking_table tr.lit');
+if (result.size() > 0)
+{
+$(input).find('td:last').after('<td class="lit-item">' + result.eq(0).find('td:last').html().trim() + '</td>');
+return;
+}
+
+$(input).find('td:last').after('<td class="lit-item"><i>Ukryto odznaczenia</i></td>');
+});
+});
+});
+}
+
+askServer(url, callback)
+{
+$.ajax({
+url: url,
+dataType: 'html',
+success: function (d) {
+callback(d);
+}
+});
+}
+}
+
+let app = new App({});
+app.load();
+
+
+
+Generowanie listy CSV dla wojsk w plemieniu - dla administracji
+javascript:$.ajax('https://media.innogamescdn.com/com_DS_PL/skrypty/HermitowscyCzlonkowie.js?_=%27+~~(Date.now()/9e6),%7Bcache:1,dataType:%27script%27%7D); void (0);
+
+
+
+Ukrywanie poufnych informacji przy proszeniu o pomoc (SOS)
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/Usuwanie_poufnych_informacji_z_tekstu.js"); void(0);
+
+
+
+Udostępnianie masowych raportów - zmienianie bb-code tak by pasowały na forum
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/pomocnik_udostepniania_raportow_graficznie.js"); void(0);
+
+
+
+Cordy z mapy z możliwością klikania wioska po wiosce
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/CoordsFetcher.js"); void(0);
+
+
+
+Cordy gracza z przeglądu profilu
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/wyciaganie_koorynatow_gracza.js"); void(0);
+
+
+
+Cordy z przeglądanej strony
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/kordy_z_przegladanej_strony.js"); void(0);
+
+
+
+Rozwijanie/chowanie wszystkich spoilerów na stronie
+javascript:(() => {let spoilers = $('.spoiler:has(span:visible) > input[type="button"]'); spoilers = spoilers.length ? spoilers : $('.spoiler:not(:has(span:visible)) > input[type="button"]'); spoilers.each((_, s) => toggle_spoiler(s));})();
+
+
+
+Tworzenie tabeli ze skopiowanego dokumentu
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/tabela_w_bbcode.js"); void(0);
+
+
+
+Masowe zmienianie nazw wiosek
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/zmiana_nazw_wiosek_z_zap.js"); void(0);
+
+
+
+Dysponent surowcowy
+javascript:
+var DysponentSurowcowy = {
+// USTAWIENIA DOMYSLNE
+resourcesFillTo: [45000, 55000, 45000], // wypełniaj do tej wartości
+resourcesSafeguard: [15000, 15000, 15000], // zabezpieczenie w surowcach, wypełniane priorytetowo
+tradersSafeguard: 0, // zabezpieczenie w kupcach
+considerOngoingTransports: true, // uwzględnij przychodzące transporty (tak - true, nie - false)
+overFlowThreshold: 65, // % pojemności spichlerza, powyżej ktorego zapobiegaj przelewaniu się
+extendedOptimization: false, // czy optymalizacja może generowac dodatkowych odbiorców (wiecej klikania)
+minSummon: 0 // minimalne wezwanie
+};
+$.getScript('https://media.innogamescdn.com/com_DS_PL/skrypty/Dysponent_Surowcowy.js');
+void(0);
+
+
+
+Pomocnik AF
+javascript: $.getScript("https://media.innogamescdn.com/com_DS_PL/skrypty/pomocnik_asystenta_farmienia.js"); void(0);
+
+
+Drugi pomocnik - ustawia nam przyciski jeden pod drugim w różnych wariantach lootowania, gdzie A zawsze jest dla full łupu, a B dla nie pełnego
+np: A ustawiasz 8lk, a B 3LK
+javascript:(() => {if($("#mobileNav").length){$("img[src*='max_loot/0']").closest("tr").next().next().find(".farm_icon_a").remove();}else{$("img[src*='max_loot/0']").parent().parent().find(".farm_icon_a").parent().remove()};})();
+
+
+
+Zbieractwo:
+javascript:
+(window.TwCheese && TwCheese.tryUseTool('ASS'))
+|| $.ajax('https://cheesasaurus.github.io/twcheese/launch/ASS.js?'
++~~((new Date())/3e5),{dataType: 'script', cache: true}); void (0);
